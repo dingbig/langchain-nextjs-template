@@ -60,6 +60,73 @@ const imagesTool = new DynamicStructuredTool({
   },
 });
 
+
+const audioFilePicker = new DynamicStructuredTool({
+  name: "AudioFilePicker",
+  description: "A tool to select a local audio file.",
+  schema: z.object({
+    // audioFilePath: z.string().describe("The file path that contains the audio")
+  }),
+  func: async (input, config) => {
+    let resolvePromise: (value: number) => void;
+    const conditionPromise = new Promise<number>((resolve) => {
+      resolvePromise = resolve;
+    });
+
+    const stream = createRunnableUI(config);
+    let audioBase64Data = ""
+    stream.update(
+      <div>
+        <h1>Please upload me a audio file</h1>
+        <input type="file" />
+        <button id="btnUpload"
+        >
+          Upload a audio
+        </button>
+      </div>
+    );
+
+
+    const btnUpload = document.getElementById("btnUpload");
+    if(btnUpload) {
+      btnUpload.addEventListener("click", () => {
+        console.log("fuck!!!!!!!!!!!!")
+        resolvePromise(0); // Call resolvePromise to resolve the Promise
+      });
+    }
+    
+    await conditionPromise;
+
+    console.log("!!!")
+    
+    stream.done(
+      <button
+      >cut it!</button>,
+    );
+
+    return `[Returned "/tmp/a.mp3"]`;
+  },
+});
+
+const audiocutTool = new DynamicStructuredTool({
+  name: "AudioCutter",
+  description: "A tool to cut audios. input should be a audio file path.",
+  schema: z.object({
+    audioFilePath: z.string().describe("The file path that contains the audio")
+  }),
+  func: async (input, config) => {
+    const stream = createRunnableUI(config);
+    stream.update(<div>Cutting...</div>);
+
+    stream.done(
+      <audio controls src={"1111.mp3"}
+      />,
+    );
+
+    return `[Returned 1 audio]`;
+  },
+});
+
 const prompt = ChatPromptTemplate.fromMessages([
   [
     "system",
@@ -71,12 +138,13 @@ const prompt = ChatPromptTemplate.fromMessages([
 ]);
 
 const llm = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo-1106",
+  // modelName: "gpt-3.5-turbo-1106",
+  modelName: "gpt-4",
   temperature: 0,
   streaming: true,
 });
 
-const tools = [searchTool, imagesTool];
+const tools = [searchTool, imagesTool, audioFilePicker, audiocutTool];
 
 export const agentExecutor = new AgentExecutor({
   agent: createToolCallingAgent({ llm, tools, prompt }),
